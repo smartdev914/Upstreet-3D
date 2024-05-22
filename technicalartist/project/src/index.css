@@ -1,0 +1,52 @@
+.controlbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(51, 51, 51, 0.8);
+    color: white;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.custom-select-container {
+    position: relative;
+    display: inline-block;
+    line-height: 5;
+}
+
+.custom-select {
+    appearance: none; /* Remove default select styling */
+    -webkit-appearance: none; /* Remove default select styling for Safari */
+    -moz-appearance: none; /* Remove default select styling for Firefox */
+    background-color: #acacac;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* Add a custom arrow to the select */
+.custom-select-container::after {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: white;
+    font-size: 12px;
+}
+
+.custom-select option {
+    color: black; /* Ensure dropdown options are readable */
+}
+
+/* Optional: Style the select when it's focused */
+.custom-select:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
