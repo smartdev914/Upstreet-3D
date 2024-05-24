@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { GUI } from 'dat.gui';
 import './index.css'
 
 const Area = Object.freeze({
@@ -149,43 +150,45 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 function createTerrainShaderMaterial(area) {
   const vertexShader = `
-    varying vec3 vPosition;
-    varying vec3 vNormal;
-    varying vec2 vUv;
-
-    void main() {
-      vPosition = position;
-      vNormal = normalize(normalMatrix * normal);
-      vUv = position.xz * 0.01;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `;
-
-  const fragmentShader = `
-  varying vec3 vPosition;
-  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
   varying vec2 vUv;
 
-  uniform sampler2D snowTexture;
-  uniform sampler2D rockTexture;
-  uniform float snowHeight;
-  uniform float rockSlope;
-
   void main() {
-    float height = vPosition.y;
-    float slope = dot(vNormal, vec3(0.0, 1.0, 0.0));
-
-    vec4 snowColor = texture2D(snowTexture, vUv);
-    vec4 rockColor = texture2D(rockTexture, vUv);
-
-    float snowFactor = smoothstep(snowHeight - 10.0, snowHeight + 10.0, height);
-    float rockFactor = smoothstep(rockSlope - 0.1, rockSlope + 0.1, slope);
-
-    // Blending rock and snow based on height and slope
-    vec4 finalColor = mix(rockColor, snowColor, snowFactor * (1.0 - rockFactor));
-    gl_FragColor = finalColor;
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPosition.xyz;
+    vUv = position.xz * 0.01;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
+
+
+
+const fragmentShader = `
+varying vec3 vWorldPosition;
+varying vec2 vUv;
+  uniform sampler2D snowTexture;
+  uniform sampler2D rockTexture;
+  uniform float slopeThreshold;
+
+  void main() {
+    float dydx = dFdx(vWorldPosition.y);
+    float dydy = dFdy(vWorldPosition.y);
+
+    float slope = length(vec2(dydx, dydy));
+
+
+    float slopeEffect = clamp(slope, 0.0, 1.0); // Adjust the multiplier as needed
+
+    vec4 snowyColor = texture2D(snowTexture, vUv);
+    vec4 rockyColor = texture2D(rockTexture, vUv);
+    float smoothSlope = smoothstep(slopeThreshold - 0.2, slopeThreshold + 0.2, slopeEffect);
+
+    // Determine the color based on the slope
+    vec4 color = mix(rockyColor, snowyColor, 1.0 - smoothSlope);
+    gl_FragColor = color;
+  }
+`;
+
 
   let texture1, texture2
   switch (area) {
@@ -215,10 +218,10 @@ function createTerrainShaderMaterial(area) {
     vertexShader,
     fragmentShader,
     uniforms: {
+      snowLine: { value: 10 },
+      slopeThreshold: { value: 0.8 },
       snowTexture: { value: texture1 },
       rockTexture: { value: texture2 },
-      snowHeight: { value: 10 },
-      rockSlope: { value: 0.8 }
     }
   });
 }
