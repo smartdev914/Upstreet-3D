@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { GUI } from 'dat.gui';
 import './index.css'
 
 const Area = Object.freeze({
